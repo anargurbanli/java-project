@@ -1,0 +1,77 @@
+version: '3'
+services:
+# Zookeeper
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    networks:
+      - helloworld
+
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+# Kafka
+  kafka:
+    image: wurstmeister/kafka:latest
+    networks:
+      - helloworld
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://kafka:9093,OUTSIDE://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+# ELK Stack
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.15.1
+    container_name: logstash
+    networks:
+      - helloworld
+    command: ["-f", "/usr/share/logstash/pipeline/logstash.conf"]
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+#    volumes:
+#      - ./logstash-config:/usr/share/logstash/pipeline
+
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    ports:
+      - "5000:5000"
+# Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.1
+    container_name: kibana
+    networks:
+      - helloworld
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+# Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.1
+    container_name: elasticsearch
+    networks:
+      - helloworld
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: "single-node"
+  hello-world-microservice:
+    image: hello-world-microservice:latest
+    container_name: hello-world-microservice
+    networks:
+      - helloworld
+#    build:
+#      context: ./hello-world-microservice
+#      dockerfile: Dockerfile
+#      command: >
+#        bash -c '
+#        chown root: /etc/filebeat/filebeat.yml && service filebeat start'
+    ports:
+      - "8080:8080"
+networks:
+  helloworld:
+    driver: bridge

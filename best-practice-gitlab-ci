@@ -1,0 +1,67 @@
+stages:
+  - lint
+  - build
+  - package
+  - deploy
+  - test
+  - security-scan
+  - cleanup
+
+variables:
+  DOCKER_IMAGE_NAME: "hello-world-microservice"
+  DOCKER_IMAGE_TAG: "latest"
+
+lint:
+  stage: lint
+  script:
+    - echo "Linting source code"
+    # Example: Run a linter on your Java code
+    - ./gradlew checkstyleMain
+
+build:
+  stage: build
+  script:
+    - echo "Building Docker image"
+    # Building the Docker image for the hello-world-microservice
+    - docker build -t $CI_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG ./hello-world-microservice
+    - docker push $CI_REGISTRY/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG
+
+package:
+  stage: package
+  script:
+    - echo "Packaging with Helm"
+    # Lint and package the application using Helm
+    - helm lint ./helm/hello-world
+    - helm package ./helm/hello-world-microservice -d ./helm-packages
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying to Kubernetes"
+    # Deploy the Helm chart to your Kubernetes cluster
+    - helm upgrade --install hello-world ./helm-packages/hello-world-*.tgz --values ./helm/hello-world/values.yaml
+
+test:
+  stage: test
+  script:
+    - echo "Running tests"
+    - curl https://hello-world.local.az/
+    - ./integration-tests/run_tests.sh
+
+security-scan:
+  stage: security-scan
+  image: sonarsource/sonar-scanner-cli:latest
+  variables:
+    SONAR_HOST_URL: "https://sonarqube.local.az"
+    SONAR_TOKEN: "sonarqube-token"
+  script:
+    - sonar-scanner -Dsonar.projectKey=hello-world-microservice -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+
+cleanup:
+  stage: cleanup
+  when: always
+  script:
+    - echo "Cleaning up resources"
+    # Example: Remove unused Docker images or Helm releases
+    - docker image prune -f
+    - helm uninstall hello-world

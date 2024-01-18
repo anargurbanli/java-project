@@ -3,4 +3,4 @@ Simple Java Project which runs on Tomcat. Inside Tomcat container runs Filebeat 
 
 ## Usage
 - __$ git clone https://github.com/anargurbanli/java-project.git__ \
-Clone and add project to your local GitHub Repository and Run Pipline
+Clone and add project to your local GitHub Repository and run pipline

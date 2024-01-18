@@ -10,6 +10,7 @@ stages:
 variables:
   DOCKER_IMAGE_NAME: "hello-world-microservice"
   DOCKER_IMAGE_TAG: "latest"
+  HELM_CHART_NAME: "hello-world-microservice"
 
 lint:
   stage: lint

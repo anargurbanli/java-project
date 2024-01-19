@@ -21,7 +21,8 @@ $ curl -X GET "localhost:9200/_cat/indices?v"
 
 ## Check ELK
 1. Open web url on browser http://localhost:5601
-2. Create new index
-3. Discover logs
+2. Navigate to "Stack Management" > "Kibana" > "Index Management"
+3. Create index pattern > hello-world-logs
+4. Navigate to "Discover" menu on the top and watch logs
 ![image](https://github.com/anargurbanli/java-project/assets/47213126/a8e98981-1c1b-4349-a76b-3ea8fc13b823)
 
